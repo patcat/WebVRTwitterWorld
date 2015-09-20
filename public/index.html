@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>VR Twitter World</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <style>
+      body {
+        margin: 0px;
+        overflow: hidden;
+      }
+      #webglviewer {
+        bottom: 0;
+        left: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="webglviewer"></div>
+
+    <script src="./js/three.min.js"></script>
+    <script src="./js/VRControls.js"></script>
+    <script src="./js/VREffect.js"></script>
+    <script src="./js/webvr-polyfill.js"></script>
+    <script src="./js/webvr-manager.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+      var scene,
+          camera, 
+          renderer,
+          element,
+          container,
+          effect,
+          controls,
+          manager,
+          clock = new THREE.Clock(),
+
+          socket = io(),
+
+          // Towers
+          tweetTowers = new THREE.Object3D(),
+          particleTexture,
+          particleMaterial,
+          maxTowerCount = 6000,
+          range = 100;
+
+      init();
+
+      socket.on('tweet', function(tweet) {
+        generateTower({
+          color: parseInt('0x'+ tweet.user.profile_background_color),
+          startingCoords: {
+            x: getRandomArbitrary(-1*range, range),
+            y: 0,
+            z: getRandomArbitrary(-1*range, range)
+          },
+          speed: 3,
+          size: (tweet.text.length / 140) * 100
+        });
+      });
+
+      function init() {
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.001, 700);
+        camera.position.set(0, 15, 0);
+        scene.add(camera);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        element = renderer.domElement;
+        container = document.getElementById('webglviewer');
+        container.appendChild(element);
+
+        controls = new THREE.VRControls(camera);
+
+        effect = new THREE.VREffect(renderer);
+        effect.setSize(window.innerWidth, window.innerHeight);
+
+        manager = new WebVRManager(renderer, effect, {hideButton: false});
+
+        particleTexture = THREE.ImageUtils.loadTexture('textures/particle-new.png');
+
+        scene.add(tweetTowers);
+
+        animate();
+      }
+
+      function generateTower(options) {
+        var towerGeometry = new THREE.Geometry();
+        
+        var particleMovements = {
+          start: 0,
+          end: options.size,
+          speed: options.speed
+        };
+        var currentCoords = {x: 0, y: 0, z: 0},
+            startingCoords = options.startingCoords ? options.startingCoords : currentCoords;
+
+        for (var i = 0; i < options.size; i++) {
+          currentCoords = {
+            x: startingCoords.x,
+            y: startingCoords.y + particleMovements.speed * i,
+            z: startingCoords.z
+          };
+
+          towerGeometry.vertices.push(new THREE.Vector3(currentCoords.x, currentCoords.y, currentCoords.z));
+
+          particleMaterial = new THREE.PointsMaterial({
+            map: particleTexture,
+            color: options.color,
+            blending: THREE.AdditiveBlending,
+            transparent: true,
+            size: 4
+          });
+
+          var tower = new THREE.Points(towerGeometry, particleMaterial);
+
+          tweetTowers.add(tower);
+          if (tweetTowers.children.length > maxTowerCount) {
+            tweetTowers.children[tweetTowers.children.length - maxTowerCount].visible = false;
+          }
+        }
+      }
+
+      function animate(timestamp) {
+        requestAnimationFrame(animate);
+
+        update(timestamp);
+      }
+
+      function resize() {
+        var width = container.offsetWidth;
+        var height = container.offsetHeight;
+
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+
+        effect.setSize(width, height);
+      }
+
+      function update(timestamp) {
+        controls.update();
+
+        manager.render(scene, camera, timestamp);
+      }
+
+      function getRandomArbitrary(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      window.addEventListener('resize', resize, false);
+    </script>
+  </body>
+</html>

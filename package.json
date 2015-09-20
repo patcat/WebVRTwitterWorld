@@ -1,0 +1,21 @@
+{
+  "name": "WebVRTwitterWorld",
+  "version": "0.1.0",
+  "description": "A VR 3D tweet visualiser using Three.js, WebGL and WebVR",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "Patrick Catanzariti",
+  "repository": "https://github.com/patcat/VRTwitterWorld",
+  "dependencies": {
+    "body-parser": "^1.13.3",
+    "errorhandler": "^1.4.2",
+    "express": "^4.13.3",
+    "node-tweet-stream": "^1.8.2",
+    "socket.io": "^1.3.6",
+    "underscore": "^1.8.3",
+    "user-stream": "0.0.7"
+  }
+}
