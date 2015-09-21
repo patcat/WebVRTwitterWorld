@@ -3,7 +3,7 @@ Web VR Twitter World
 
 An updated version of [VR Twitter World](https://github.com/sitepoint-editors/VRTwitterWorld) that uses WebVR. 
 
-This is a demo using Three.js to create a visualisation of real time tweets as particles. In order to get this to run, you'll need to create a config.json file like so:
+This is a demo using Three.js to create a visualisation of real time tweets as particles. In order to get this to run, you'll need to create a config.json file like so with your Twitter API credentials:
 
 ```
 {
